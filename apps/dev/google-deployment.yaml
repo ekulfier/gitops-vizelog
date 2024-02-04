@@ -20,7 +20,7 @@ spec:
         emptyDir: {}
       serviceAccountName: default
       containers:
-        - image: thecodingadventure/googleservice:cbc671c0ff0f7c0d869e3ab572562ba2d416594c
+        - image: thecodingadventure/googleservice:6bcbf5eeef5f1b4b0bb8ee2679cab8a907fd5ade
           name: googleservice-container
           volumeMounts:
           - mountPath: /tmp
@@ -28,4 +28,4 @@ spec:
           securityContext:
             runAsNonRoot: true
             runAsUser: 100
-            readOnlyRootFilesystem: true
+            readOnlyRootFilesystem: false
