@@ -18,7 +18,7 @@ spec:
       volumes:
       - name: vol
         emptyDir: {}
-      serviceAccountName: defalut
+      serviceAccountName: default
       containers:
         - image: thecodingadventure/googleservice:4c402011a4fabf54432f5611eb7c09579354284c
           name: googleservice-container
