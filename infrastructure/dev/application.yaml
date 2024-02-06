@@ -11,7 +11,7 @@ spec:
     targetRevision: HEAD
     path: apps/dev
   destination:
-    server: https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com
+    server: https://kubernetes.default.svc
     namespace: dev-vizelog
 
   syncPolicy:
