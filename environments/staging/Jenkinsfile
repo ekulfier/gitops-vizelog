@@ -5,6 +5,8 @@ pipeline {
     deploymentName = "googleservice-depl"
 		APP_NAME="thecodingadventure/googleservice"
 		IMAGE_TAG = "${GIT_COMMIT}"
+    applicationURL = "http://178.128.101.12"
+    applicationURI = "api/google/search/trend/google"
   }
 
   stages {
@@ -30,7 +32,7 @@ pipeline {
               }
             } catch (e) {
               // reversioning to previous commit
-              git branch: 'staging', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+              git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
               def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').toString.trim()
               withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
                 sh "git checkout ${previousCommit}"
@@ -55,7 +57,7 @@ pipeline {
       stages {
         stage("Checkout from SCM") {
           steps {
-            git branch: 'prod', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+            git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
           }
         }
 
@@ -81,7 +83,7 @@ pipeline {
                 git commit -m "Updated Deployment Manifest"
               """
               withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                sh "git push https://github.com/ekulfier/gitops-vizelog prod"
+                sh "git push https://github.com/ekulfier/gitops-vizelog main"
               }
             }   
           }
@@ -92,7 +94,7 @@ pipeline {
             dir("environments/staging") {
               script {
                 // reversioning to previous commit
-                git branch: 'prod', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+                git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
                 def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').toString.trim()
                 withKubeConfig([credentialsId: 'kubeconfig']) {
                   withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
