@@ -1,0 +1,124 @@
+pipeline {
+	agent any
+
+
+  stages {
+    stage('clean workspace') {
+        steps {
+          cleanWs()
+        }
+    }
+
+    stage('Checkout') {
+			steps {
+				checkout scm
+			}
+    }
+
+    stage('Integration Tests - Staging') {
+      steps {
+        script {
+          try {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              sh "bash integration-test.sh"
+            }
+          } catch (e) {
+            // reversioning to previous commit
+            git branch: 'staging', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+            def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
+            withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+              sh "git checkout ${previousCommit}"
+            }
+            throw e
+          }
+        }
+      }
+    }
+
+
+    stage('OWASP ZAP - DAST') {
+      steps {
+        withKubeConfig([credentialsId: 'kubeconfig']) {
+          sh 'bash zap.sh'
+        }
+      }
+    }
+
+  }
+
+    stage('Prompte to PROD?') {
+      steps {
+        timeout(time: 2, unit: 'DAYS') {
+          input 'Do you want to Approve the Deployment to Production Environment/Namespace?'
+        }
+      }
+    }
+
+    stage('K8S CIS Benchmark') {
+      steps {
+        script {
+
+          parallel(
+            "Master": {
+              sh "bash cis-master.sh"
+            },
+            "Etcd": {
+              sh "bash cis-etcd.sh"
+            },
+            "Kubelet": {
+              sh "bash cis-kubelet.sh"
+            }
+          )
+
+        }
+      }
+    }
+
+	  stage('K8S Deployment - PROD') {
+      
+      stages {
+        stage("Checkout from SCM") {
+          steps {
+            git branch: 'prod', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+          }
+        }
+
+        stage("Update the Deployment Tags") {
+          steps {
+              dir("apps/prod") {
+                  sh """
+                      cat google-deployment.yaml
+                      sed -i 's#${APP_NAME}.*#${APP_NAME}:${IMAGE_TAG}#g' google-deployment.yaml
+                      cat google-deployment.yaml
+                  """
+              }
+          }
+        }
+
+        stage("Push the changed deployment file to Git") {
+          steps {
+            dir("apps/prod") {
+              sh """
+                git config --global user.name "ekulfier"
+                git config --global user.email "sorrachak.holy201@gmail.com"
+                git add google-deployment.yaml
+                git commit -m "Updated Deployment Manifest"
+              """
+              withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+                sh "git push https://github.com/ekulfier/gitops-vizelog prod"
+              }
+            }   
+          }
+        }
+
+        stage()
+      }
+    }
+  
+  
+  }
+
+  post {
+     
+  }
+}
