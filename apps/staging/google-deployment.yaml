@@ -20,7 +20,7 @@ spec:
         emptyDir: {}
       serviceAccountName: default
       containers:
-        - image: thecodingadventure/googleservice:ff8d6e5d2d78ec7d1a5dbbe7ce01f9a29178a0a1
+        - image: thecodingadventure/googleservice:e9532493d4a94280f84908a5dad4c0dafe25c4d9
           name: googleservice-container
           volumeMounts:
           - mountPath: /tmp
