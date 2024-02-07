@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dev-vizelog-application
+  name: prod-vizelog-application
   namespace: argocd
 spec:
   project: default
@@ -9,10 +9,10 @@ spec:
   source:
     repoURL: https://github.com/ekulfier/gitops-vizelog.git
     targetRevision: HEAD
-    path: apps/dev
+    path: apps/prod
   destination:
     server: https://kubernetes.default.svc
-    namespace: dev-vizelog
+    namespace: prod-vizelog
 
   syncPolicy:
     syncOptions:

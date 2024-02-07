@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: googleservice
+  name: googleservice-depl
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: googleservice
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: googleservice
+    spec:
+      volumes:
+      - name: vol
+        emptyDir: {}
+      serviceAccountName: default
+      containers:
+        - image: thecodingadventure/googleservice:ff8d6e5d2d78ec7d1a5dbbe7ce01f9a29178a0a1
+          name: googleservice-container
+          volumeMounts:
+          - mountPath: /tmp
+            name: vol
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            readOnlyRootFilesystem: false
