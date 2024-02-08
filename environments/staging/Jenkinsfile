@@ -33,7 +33,7 @@ pipeline {
             } catch (e) {
               // reversioning to previous commit
               git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
-              def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').toString.trim()
+              def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
               withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
                 sh "git checkout ${previousCommit}"
               }
@@ -95,7 +95,7 @@ pipeline {
               script {
                 // reversioning to previous commit
                 git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
-                def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').toString.trim()
+                def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
                 withKubeConfig([credentialsId: 'kubeconfig']) {
                   withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
                     sh '''
