@@ -3,6 +3,7 @@ pipeline {
 
   environment {
     deploymentName = "googleservice-depl"
+    serviceName = "googleservice-srv"
 		APP_NAME="thecodingadventure/googleservice"
 		IMAGE_TAG = "${GIT_COMMIT}"
     applicationURL = "http://178.128.101.12"
