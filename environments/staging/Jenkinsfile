@@ -36,7 +36,8 @@ pipeline {
               git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
               def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
               withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                sh "git checkout ${previousCommit}"
+                sh "git revert ${previousCommit}"
+                sh "git push origin main"
               }
               throw e
             }
@@ -106,7 +107,8 @@ pipeline {
                       if [[ $(kubectl -n prod-vizelog rollout status deploy ${deploymentName} --timeout 10s) != *"successfully rolled out"* ]]; 
                       then     
                         echo "Deployment ${deploymentName} Rollout has Failed"
-                        git checkout ${previousCommit}
+                        git revert ${previousCommit}
+                        git push origin main
                         exit 1;
                       else
                         echo "Deployment ${deploymentName} Rollout is Success"
@@ -116,6 +118,27 @@ pipeline {
                 }
               }
             }
+          }
+        }
+      }
+    }
+
+    stage('Integration Tests - PROD') {
+      steps {
+        script {
+          try {
+            withKubeConfig([credentialsId: 'kubeconfig']) {
+              sh "bash integration-test-PROD.sh"
+            }
+          } catch (e) {
+            // reversioning to previous commit
+              git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+              def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
+              withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+                sh "git revert ${previousCommit}"
+                sh "git push origin main"
+              }
+              throw e
           }
         }
       }
