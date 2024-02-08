@@ -14,13 +14,11 @@ if [[ ! -z "$PORT" ]];
 then
 
     http_code=$(curl -s -o /dev/null -w "%{http_code}" $applicationURL:$PORT$applicationURI)
-	
 
     if [[ "$http_code" == 200 ]];
         then
             echo "HTTP Status Code Test Passed"
         else
-			echo "$http_code"
             echo "HTTP Status code is not 200"
             exit 1;
     fi;
