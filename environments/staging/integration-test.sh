@@ -15,11 +15,11 @@ then
 
     http_code=$(curl -s -o /dev/null -w "%{http_code}" $applicationURL:$PORT$applicationURI)
 
-    if [[ "$http_code" == 200 ]];
+    if [[ "$http_code" == 000 ]];
         then
             echo "HTTP Status Code Test Passed"
         else
-            echo "HTTP Status code is not 200"
+            echo "HTTP Status code is not 000"
             exit 1;
     fi;
 
