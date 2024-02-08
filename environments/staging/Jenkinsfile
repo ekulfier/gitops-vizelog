@@ -32,13 +32,6 @@ pipeline {
                 sh "bash integration-test.sh"
               }
             } catch (e) {
-              // reversioning to previous commit
-              git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
-              def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
-              withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                sh "git revert ${previousCommit}"
-                sh "git push origin main"
-              }
               throw e
             }
           }
@@ -65,13 +58,25 @@ pipeline {
 
         stage("Update the Deployment Tags") {
           steps {
-              dir("apps/prod") {
-                  sh """
-                      cat google-deployment.yaml
-                      sed -i 's#${APP_NAME}.*#${APP_NAME}:${IMAGE_TAG}#g' google-deployment.yaml
-                      cat google-deployment.yaml
-                  """
+            dir("apps/staging") {
+              script {
+                def yamlContent = readFile 'google-deployment.yaml'
+                def imageTag = yamlContent =~ /image: thecodingadventure\/googleservice:(\w+)/
+                if (imageTag) {
+                    def imageTagValue = imageTag[0][1]
+                    println "Image Tag: $imageTagValue"
+                    dir("../prod") {
+                        sh """
+                            cat google-deployment.yaml
+                            sed -i 's#thecodingadventure/googleservice:.*#thecodingadventure/googleservice:${imageTagValue}#g' google-deployment.yaml
+                            cat google-deployment.yaml
+                        """
+                    }
+                } else {
+                    error "Image tag not found in the YAML file"
+                }
               }
+            }
           }
         }
 
@@ -107,8 +112,6 @@ pipeline {
                       if [[ $(kubectl -n prod-vizelog rollout status deploy ${deploymentName} --timeout 10s) != *"successfully rolled out"* ]]; 
                       then     
                         echo "Deployment ${deploymentName} Rollout has Failed"
-                        git revert ${previousCommit}
-                        git push origin main
                         exit 1;
                       else
                         echo "Deployment ${deploymentName} Rollout is Success"
@@ -131,13 +134,6 @@ pipeline {
               sh "bash integration-test-PROD.sh"
             }
           } catch (e) {
-            // reversioning to previous commit
-              git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
-              def previousCommit = sh(returnStdout: true, script: 'git rev-parse HEAD^').trim()
-              withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                sh "git revert ${previousCommit}"
-                sh "git push origin main"
-              }
               throw e
           }
         }
